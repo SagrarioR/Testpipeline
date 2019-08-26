@@ -11,8 +11,8 @@ fi
 DEBUG="echo "
 DEBUG=""
 
-INSTANCE_ID=i-009fbbee96aea3f15
-REGION=us-east-1
+INSTANCE_ID=i-089ef464950621f5d
+REGION=us-east-1a
 
 INSTANCE_STS=`aws ec2 describe-instance-status --region $REGION --instance-ids $INSTANCE_ID | jq -r '.InstanceStatuses[].InstanceState.Name'`
 
