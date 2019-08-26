@@ -1,15 +1,45 @@
 #!/bin/bash
-tmpFile="/tmp/ec2.info"
- ec2Info=`ec2-describe-instances > $tmpFile`
- instances=`cat $tmpFile | grep TAG | awk {'print $3'}`
- numOfInstances=`cat $tmpFile | grep INSTANCE | wc -l`
- you=`whoami`
+function usage() {
+  echo "$0 (start|stop|status)"
+}
 
+if [ $# -ne 1 ]; then
+  usage
+  exit 2
+fi
 
- echo "Dear $you, I wanted to describe for you the current number of instances you have: $numOfInstances"
- echo "The instances you have, by hostname, are as follows ..."
- for instance in $instances
- do
-      hostname=`cat $tmpFile | grep INSTANCE | grep $instance | awk {' print $4 '}`
-      echo "$hostname"
- done
+DEBUG="echo "
+DEBUG=""
+
+INSTANCE_ID=i-009fbbee96aea3f15
+REGION=us-east-1
+
+INSTANCE_STS=`aws ec2 describe-instance-status --region $REGION --instance-ids $INSTANCE_ID | jq -r '.InstanceStatuses[].InstanceState.Name'`
+
+echo "InstanceStatus : [$INSTANCE_STS]"
+
+EXIT=0
+if [ "$1" = "start" ]; then
+  if [ "$INSTANCE_STS" = "running" ]; then
+    echo "instance is already running."
+  else
+    echo "start instance..."
+    $DEBUG aws ec2 start-instances --instance-ids $INSTANCE_ID --region $REGION
+    EXIT=$?
+  fi
+elif [ "$1" = "stop" ]; then
+  if [ "$INSTANCE_STS" = "running" ]; then
+    echo "stop instance..."
+    $DEBUG aws ec2 stop-instances --instance-ids $INSTANCE_ID --region $REGION
+    EXIT=$?
+  else
+    echo "instance is already stopped."
+  fi
+elif [ "$1" = "status" ]; then
+  echo "Status Check only."
+else
+  usage
+  EXIT=2
+fi
+
+exit $EXIT
